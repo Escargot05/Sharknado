@@ -1,6 +1,3 @@
-from dateutil.parser import parse
-from datetime import datetime
-
 def isFloat(string):
     try:
         float(string)
@@ -47,20 +44,9 @@ def determineSize(num):
 
     return size if num != -1 else ""
 
-def isDate(string):
-
-    format = "%d-%b-%Y"
-    res = True
-    try: 
-        res = bool(datetime.strptime(string, format))
-    except ValueError:
-        res = False
-
-    return res
 
 if __name__ == '__main__':
 
     size = convertToNumber("Bull shark, 100cm")
     print(size)
     print(determineSize(size))
-    print(isDate("1999"))

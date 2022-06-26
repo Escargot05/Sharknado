@@ -1,4 +1,3 @@
-from sqlalchemy import null
 import xlrd
 import mysql.connector
 import utils
@@ -12,7 +11,7 @@ source = book.sheet_by_index(0)
 mydb = mysql.connector.connect(
     host = "localhost",
     user = "root",
-    password = "8431563k",
+    password = "root",
     database = "sharkdb"
 )
 mycursor = mydb.cursor()
@@ -75,7 +74,22 @@ def insertTimeDimension():
     print(f"{ROWS} records inserted")
 
 def insertCircumstancesDimension():
-    pass
+    # pass
+    for i in range(1, ROWS + 1):
+    # wybór komórki
+        country = source.cell_value(rowx = i, colx = 4)
+        area = source.cell_value(rowx = i, colx = 5)
+        location = source.cell_value(rowx = i, colx = 6)
+        activity = source.cell_value(rowx = i, colx = 7)
+
+        sql = "INSERT INTO circumstance_dimension (idcircumstances_id, activity, country, area, location) VALUES (%s, %s, %s, %s, %s)"
+        val = i, activity, country, area, location
+
+        # wykonanie statementa i commit
+        mycursor.execute(sql, val)
+        mydb.commit()
+
+    print(f"{ROWS} records inserted")
 
 def insertVictimDimension():
     pass
@@ -87,5 +101,5 @@ def insertFactAttacks():
 if __name__ == '__main__':
 
     # insertSharkDimension()
-    insertTimeDimension()
-
+    # insertTimeDimension()
+    insertCircumstancesDimension()
