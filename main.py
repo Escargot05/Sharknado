@@ -92,14 +92,45 @@ def insertCircumstancesDimension():
     print(f"{ROWS} records inserted")
 
 def insertVictimDimension():
-    pass
+    # pass
+    for i in range(1, ROWS + 1):
+    # wybór komórki
+        name = source.cell_value(rowx = i, colx = 8)
+        sex = source.cell_value(rowx = i, colx = 9)
+        age = source.cell_value(rowx = i, colx = 10)
+        if type(age) != float:
+            age = -1
+
+        sql = "INSERT INTO victim_dimension (victim_id, name, sex, age) VALUES (%s, %s, %s, %s)"
+        val = i, name, sex, age
+
+        # wykonanie statementa i commit
+        mycursor.execute(sql, val)
+        mydb.commit()
+
+    print(f"{ROWS} records inserted")
 
 def insertFactAttacks():
-    pass
+    # pass
+    for i in range(1, ROWS + 1):
+    # wybór komórki
+        mType = source.cell_value(rowx = i, colx = 3)
+        injury = source.cell_value(rowx = i, colx = 11)
+        fatal = source.cell_value(rowx = i, colx = 12)
 
+        sql = "INSERT INTO fact_attacks (case_id, type, injury, fatal, victim_id, time_id, shark_id, circumstances_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        val = i, mType, injury, fatal, i, i, i, i
+
+        # wykonanie statementa i commit
+        mycursor.execute(sql, val)
+        mydb.commit()
+
+    print(f"{ROWS} records inserted")
 
 if __name__ == '__main__':
 
     # insertSharkDimension()
     # insertTimeDimension()
-    insertCircumstancesDimension()
+    # insertCircumstancesDimension()
+    # insertVictimDimension()
+    insertFactAttacks()
