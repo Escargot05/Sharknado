@@ -12,7 +12,7 @@ source = book.sheet_by_index(0)
 mydb = mysql.connector.connect(
     host = "localhost",
     user = "root",
-    password = "8431563k",
+    password = "root",
     database = "sharkdb"
 )
 mycursor = mydb.cursor()
