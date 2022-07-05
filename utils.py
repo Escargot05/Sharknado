@@ -44,9 +44,45 @@ def determineSize(num):
 
     return size if num != -1 else ""
 
+def determineSpecies(species, sharkList):
 
-if __name__ == '__main__':
+    if species == "":
+        return "Unknown"
+    
+    species = species.lower()
+    species = species.replace(" ", "")
 
-    size = convertToNumber("Bull shark, 100cm")
-    print(size)
-    print(determineSize(size))
+    for shark in sharkList:
+        for name in shark:
+            name = name.lower()
+            name = name.replace(" ", "")
+
+            if species.find(name) == -1:
+                continue
+            
+            return shark[0]
+    
+    return "Unknown"
+
+def loadSharks(path):
+    sharks = []
+
+    with open(path) as file:
+        for line in file:
+            species = line.strip()
+            species = species.split(" ", 1)
+
+            if len(sharks) < int(species[0]):
+                sharks.append([])
+            
+            sharks[int(species[0]) - 1].append(species[1])
+        
+    return sharks
+
+
+
+# if __name__ == '__main__':
+
+#     size = convertToNumber("Bull shark, 100cm")
+#     print(size)
+#     print(determineSize(size))

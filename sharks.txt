@@ -1,0 +1,66 @@
+1 Angel shark
+2 Atlantic blacktip shark
+3 Basking shark
+4 Blacktip reef shark
+2 Blacktip shark
+5 Blacktip whaler
+6 Blue pointer
+7 Blue shark
+6 Bonito shark
+8 Broadnose seven gill shark
+9 Bronze whaler
+10 Bull shark
+10 Leucas
+11 Black whaler
+11 Macrurus
+12 Caribbean reef shark
+13 Carpet shark
+14 Cookiecutter shark
+9 Copper shark
+15 Cow shark
+16 dogfish shark
+17 Dusky shark
+18 Epaulette shark
+19 Galapagos shark
+20 Goblin shark
+21 Grey nurse shark
+22 Grey reef shark
+22 Blacktail reef shark
+23 Hammerhead shark
+24 Horn shark 
+25 Lemon shark 
+26 Leopard shark
+27 Longfin mako shark
+6 Mako shark
+28 Nurse shark
+29 Oceanic whitetip shark
+30 Porbeagle shark
+31 Port Jackson shark
+21 Raggedtooth shark
+4 Reef shark
+32 Salmon shark
+21 Sand shark
+21 Sand tiger shark
+33 Sandbar shark
+8 Sevengill shark
+8 Seven-gill shark
+6 Shortfin mako shark
+34 Shovelnose guitarfish
+34 Shovelnose shark
+35 Sickelfin lemon shark
+36 Silky shark
+37 Silvertip shark
+38 Soupfin shark
+39 Spinner shark
+16 Spurdog
+40 Starry smoothhound shark
+41 Tawny nurse shark
+42 Thresher shark
+43 Tiger shark
+38 Tope shark
+44 Whale shark
+44 Whaler shark
+45 White shark
+46 Whitetip reef shark
+47 Wobbegong shark
+48 Zambesi shark

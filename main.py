@@ -3,8 +3,6 @@ import mysql.connector
 import utils
 from dateutil import parser
 
-ROWS = 6762 # tyle mamy rekordow w bazie
-
 book = xlrd.open_workbook("GSAF5.xls")
 source = book.sheet_by_index(0)
 
@@ -14,29 +12,57 @@ mydb = mysql.connector.connect(
     password = "root",
     database = "sharkdb"
 )
+
 mycursor = mydb.cursor()
 
-def insertSharkDimension():
+def countRecords():
+    mycursor.execute("SELECT COUNT(*) FROM fact_attacks")
+    recordsNumnber = mycursor.fetchone()
 
-    for i in range(1, ROWS + 1):
-    # wybór komórki
-        species = source.cell_value(rowx = i, colx = 14)
-        # size = "veri smol"
-        size = utils.determineSize(utils.convertToNumber(species))
+    return int(recordsNumnber[0])
+
+def countAttacks():
+    validRecords = 0
+
+    for i in range(1, source.nrows):
+        if(source.cell_value(rowx = i, colx = 3) == 'Unprovoked' or 
+        source.cell_value(rowx = i, colx = 3) == 'Provoked' or
+        source.cell_value(rowx = i, colx = 3) == 'Watercraft'):
+            validRecords += 1
+
+    return validRecords
+
+def insertSharkDimension(recordNumber, sharkList):
+    speciesAndSize = source.cell_value(rowx = recordNumber, colx = 14)
+    species = utils.determineSpecies(speciesAndSize, sharkList)
+    size = utils.determineSize(utils.convertToNumber(speciesAndSize))
+
+    sql = "SELECT shark_id FROM shark_dimension WHERE size='" + str(size) + "' AND species='" + str(species) + "'"
+    mycursor.execute(sql)
+    sharkId = mycursor.fetchone()
+
+    if not sharkId:
+        sql = "SELECT COUNT(*) FROM shark_dimension"
+        mycursor.execute(sql)
+        id = mycursor.fetchone()
+        sharkId = int(id[0])
+        sharkId += 1
 
         sql = "INSERT INTO shark_dimension (shark_id, species, size) VALUES (%s, %s, %s)"
-        val = i, species, size
-        
-        # wykonanie statementa i commit
+        val = sharkId, species, size
         mycursor.execute(sql, val)
         mydb.commit()
 
-    print(f"{ROWS} records inserted")
+        return sharkId
+    
+    else:
+        return int(sharkId[0])
 
 
-def insertTimeDimension():
+
+def insertTimeDimension(records):
     # pass
-    for i in range(1, ROWS + 1):
+    for i in range(1, records + 1):
     # wybór komórki
         date = source.cell_value(rowx = i, colx = 1)
         if type(date) == str:
@@ -71,11 +97,11 @@ def insertTimeDimension():
         mycursor.execute(sql, val)
         mydb.commit()
 
-    print(f"{ROWS} records inserted")
+    print(f"{records} records inserted")
 
-def insertCircumstancesDimension():
+def insertCircumstancesDimension(records):
     # pass
-    for i in range(1, ROWS + 1):
+    for i in range(1, records + 1):
     # wybór komórki
         country = source.cell_value(rowx = i, colx = 4)
         area = source.cell_value(rowx = i, colx = 5)
@@ -89,11 +115,11 @@ def insertCircumstancesDimension():
         mycursor.execute(sql, val)
         mydb.commit()
 
-    print(f"{ROWS} records inserted")
+    print(f"{records} records inserted")
 
-def insertVictimDimension():
+def insertVictimDimension(records):
     # pass
-    for i in range(1, ROWS + 1):
+    for i in range(1, records + 1):
     # wybór komórki
         name = source.cell_value(rowx = i, colx = 8)
         sex = source.cell_value(rowx = i, colx = 9)
@@ -108,12 +134,10 @@ def insertVictimDimension():
         mycursor.execute(sql, val)
         mydb.commit()
 
-    print(f"{ROWS} records inserted")
+    print(f"{records} records inserted")
 
-def insertFactAttacks():
-    # pass
-    for i in range(1, ROWS + 1):
-    # wybór komórki
+def insertFactAttacks(records):
+    for i in range(1, records):
         mType = source.cell_value(rowx = i, colx = 3)
         injury = source.cell_value(rowx = i, colx = 11)
         fatal = source.cell_value(rowx = i, colx = 12)
@@ -125,12 +149,25 @@ def insertFactAttacks():
         mycursor.execute(sql, val)
         mydb.commit()
 
-    print(f"{ROWS} records inserted")
+    print(f"{records} records inserted")
 
 if __name__ == '__main__':
+
+    newRecords = countAttacks() - countRecords()
+
+    if(newRecords):
+        sharks = utils.loadSharks('sharks.txt')
+
+        for i in range(1, newRecords):
+            if(source.cell_value(rowx = i, colx = 3) == 'Unprovoked' or 
+                source.cell_value(rowx = i, colx = 3) == 'Provoked' or
+                source.cell_value(rowx = i, colx = 3) == 'Watercraft'):
+                    insertSharkDimension(i, sharks)
+                    # insertFactAttacks()
+
+        print(f"{newRecords} facts inserted")
 
     # insertSharkDimension()
     # insertTimeDimension()
     # insertCircumstancesDimension()
     # insertVictimDimension()
-    insertFactAttacks()
