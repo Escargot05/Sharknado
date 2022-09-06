@@ -1,11 +1,15 @@
 import xlrd
 import mysql.connector
-import utils
 from dateutil import parser
 
+import sharkDim
+import victimDim
+
+# Opening Excell file
 book = xlrd.open_workbook("GSAF5.xls")
 source = book.sheet_by_index(0)
 
+# SQL connector
 mydb = mysql.connector.connect(
     host = "localhost",
     user = "root",
@@ -15,12 +19,14 @@ mydb = mysql.connector.connect(
 
 mycursor = mydb.cursor()
 
+# Count records in database
 def countRecords():
     mycursor.execute("SELECT COUNT(*) FROM fact_attacks")
     recordsNumnber = mycursor.fetchone()
 
     return int(recordsNumnber[0])
 
+# Count valid records in Excel file
 def countAttacks():
     validRecords = 0
 
@@ -32,18 +38,21 @@ def countAttacks():
 
     return validRecords
 
+
 def insertSharkDimension(recordNumber, sharkList):
     speciesAndSize = source.cell_value(rowx = recordNumber, colx = 14)
-    species = utils.determineSpecies(speciesAndSize, sharkList)
-    size = utils.determineSize(utils.convertToNumber(speciesAndSize))
 
-    sql = "SELECT shark_id FROM shark_dimension WHERE size='" + str(size) + "' AND species='" + str(species) + "'"
-    mycursor.execute(sql)
+    species = sharkDim.determineSpecies(speciesAndSize, sharkList)
+    size = sharkDim.determineSize(sharkDim.convertLengthToNumber(speciesAndSize))
+
+    # Check if shark already exists in database
+    sql = "SELECT shark_id FROM shark_dimension WHERE size LIKE %s AND species LIKE %s"
+    val = size, species
+    mycursor.execute(sql, val)
     sharkId = mycursor.fetchone()
 
     if not sharkId:
-        sql = "SELECT COUNT(*) FROM shark_dimension"
-        mycursor.execute(sql)
+        mycursor.execute("SELECT COUNT(*) FROM shark_dimension")
         id = mycursor.fetchone()
         sharkId = int(id[0])
         sharkId += 1
@@ -59,6 +68,71 @@ def insertSharkDimension(recordNumber, sharkList):
         return int(sharkId[0])
 
 
+def insertVictimDimension(recordNumber):
+    sexRecord = source.cell_value(rowx = recordNumber, colx = 9)
+    ageRecord = source.cell_value(rowx = recordNumber, colx = 10)
+
+    sex = victimDim.determineSex(sexRecord)
+    age = victimDim.determineAge(ageRecord)
+
+    # Check if victim already exists in database
+    sql = "SELECT victim_id FROM victim_dimension WHERE sex LIKE %s AND age LIKE %s"
+    val = sex, age
+    mycursor.execute(sql, val)
+    victimId = mycursor.fetchone()
+
+    if not victimId:
+        mycursor.execute("SELECT COUNT(*) FROM victim_dimension")
+        id = mycursor.fetchone()
+        victimId = int(id[0])
+        victimId += 1
+
+        sql = "INSERT INTO victim_dimension (victim_id, sex, age) VALUES (%s, %s, %s)"
+        val = victimId, sex, age
+        mycursor.execute(sql, val)
+        mydb.commit()
+
+        return victimId
+    
+    else:
+        return int(victimId[0])
+
+def insertCircumstancesDimension(recordNumber):
+    country = source.cell_value(rowx = recordNumber, colx = 4)
+    area = source.cell_value(rowx = recordNumber, colx = 5)
+    location = source.cell_value(rowx = recordNumber, colx = 6)
+    activity = source.cell_value(rowx = recordNumber, colx = 7)
+
+    if country == "":
+        country = "unknown"
+    if area == "":
+        area = "unknown"
+    if location == "":
+        location = "unknown"
+    if activity == "":
+        activity = "unknown"
+
+    # Check if circumstances already exist in database
+    sql = "SELECT circumstances_id FROM circumstance_dimension WHERE (activity LIKE %s AND country LIKE %s AND area LIKE %s AND location LIKE %s)"
+    val = activity, country, area, location
+    mycursor.execute(sql, val)
+    circumstanceId = mycursor.fetchone()
+
+    if not circumstanceId:
+        mycursor.execute("SELECT COUNT(*) FROM circumstance_dimension")
+        id = mycursor.fetchone()
+        circumstanceId = int(id[0])
+        circumstanceId += 1
+
+        sql = "INSERT INTO circumstance_dimension (circumstances_id, activity, country, area, location) VALUES (%s, %s, %s, %s, %s)"
+        val = circumstanceId, activity, country, area, location
+        mycursor.execute(sql, val)
+        mydb.commit()
+
+        return circumstanceId
+    
+    else:
+        return int(circumstanceId[0])
 
 def insertTimeDimension(records):
     # pass
@@ -99,43 +173,6 @@ def insertTimeDimension(records):
 
     print(f"{records} records inserted")
 
-def insertCircumstancesDimension(records):
-    # pass
-    for i in range(1, records + 1):
-    # wybór komórki
-        country = source.cell_value(rowx = i, colx = 4)
-        area = source.cell_value(rowx = i, colx = 5)
-        location = source.cell_value(rowx = i, colx = 6)
-        activity = source.cell_value(rowx = i, colx = 7)
-
-        sql = "INSERT INTO circumstance_dimension (idcircumstances_id, activity, country, area, location) VALUES (%s, %s, %s, %s, %s)"
-        val = i, activity, country, area, location
-
-        # wykonanie statementa i commit
-        mycursor.execute(sql, val)
-        mydb.commit()
-
-    print(f"{records} records inserted")
-
-def insertVictimDimension(records):
-    # pass
-    for i in range(1, records + 1):
-    # wybór komórki
-        name = source.cell_value(rowx = i, colx = 8)
-        sex = source.cell_value(rowx = i, colx = 9)
-        age = source.cell_value(rowx = i, colx = 10)
-        if type(age) != float:
-            age = -1
-
-        sql = "INSERT INTO victim_dimension (victim_id, name, sex, age) VALUES (%s, %s, %s, %s)"
-        val = i, name, sex, age
-
-        # wykonanie statementa i commit
-        mycursor.execute(sql, val)
-        mydb.commit()
-
-    print(f"{records} records inserted")
-
 def insertFactAttacks(records):
     for i in range(1, records):
         mType = source.cell_value(rowx = i, colx = 3)
@@ -156,14 +193,13 @@ if __name__ == '__main__':
     newRecords = countAttacks() - countRecords()
 
     if(newRecords):
-        sharks = utils.loadSharks('sharks.txt')
+        sharks = sharkDim.loadSharkList('sharks.txt')
 
         for i in range(1, newRecords):
-            if(source.cell_value(rowx = i, colx = 3) == 'Unprovoked' or 
-                source.cell_value(rowx = i, colx = 3) == 'Provoked' or
-                source.cell_value(rowx = i, colx = 3) == 'Watercraft'):
+            if source.cell_value(rowx = i, colx = 3) != 'Invalid' and source.cell_value(rowx = i, colx = 3) != '':
                     insertSharkDimension(i, sharks)
-                    # insertFactAttacks()
+                    insertVictimDimension(i)
+                    insertCircumstancesDimension(i)
 
         print(f"{newRecords} facts inserted")
 
